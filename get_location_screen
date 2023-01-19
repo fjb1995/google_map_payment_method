@@ -1,0 +1,88 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../controller/shared/addaddress_controller.dart';
+import '../../../core/constants/color.dart';
+import '../../../core/constants/constants.dart';
+
+class GetLocationMap extends GetView<AddNewAddressControllerImp> {
+  const GetLocationMap({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text(
+            "الموقع",
+            style: Theme.of(context).textTheme.headline1,
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black),
+        ),
+        body: GetBuilder<AddNewAddressControllerImp>(
+          builder: (builder) => Column(
+            children: [
+              Expanded(
+                  flex: 6,
+                  child: Stack(
+                    alignment: Alignment.bottomLeft,
+                    children: [
+                      controller.kGooglePlex == null
+                          ? const CircularProgressIndicator()
+                          : GoogleMap(
+                              mapType: MapType.normal,
+                              markers: controller.myMarker,
+                              onTap: (latLng) {
+                                controller.onMapTab(latLng);
+                              },
+                              initialCameraPosition: controller.kGooglePlex,
+                              onMapCreated: (GoogleMapController myController) {
+                                controller.googleMapController = myController;
+                              },
+                            ),
+                      Container(
+                        padding: const EdgeInsets.all(15),
+                        child: FloatingActionButton.extended(
+                          onPressed: () {
+                            controller.myCurrentLocation();
+                          },
+                          label: const Text('موقعي'),
+                          icon: const Icon(Icons.my_location),
+                        ),
+                      ),
+                    ],
+                  )),
+                  Padding(
+                padding: const EdgeInsets.only(top: 15),
+                child: Text(
+                  "${controller.street}, ${controller.state}, ${controller.city}",
+                  style: Theme.of(context).textTheme.headline3,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.all(20),
+                width: AppConstants.buttonWidth,
+                height: 55.0,
+                decoration: BoxDecoration(
+                    color: AppColor.primaryButton,
+                    borderRadius: BorderRadius.circular(45)),
+                child: MaterialButton(
+                  onPressed: () {
+                    controller.setLocation();
+                  },
+                  child: Text("اختيار الموقع",
+                      style: Theme.of(context).textTheme.button),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
