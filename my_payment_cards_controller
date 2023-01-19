@@ -1,0 +1,62 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+
+abstract class MyPaymentCardsController extends GetxController{
+  getData();
+  late String cardIndex;
+  List userCardsList = [];
+  deleteCard(String cardId);
+  late TextEditingController cardController;
+}
+
+class MyPaymentCardsControllerImp extends MyPaymentCardsController{
+  @override
+
+  @override
+  getData() async {
+    userCardsList = [];
+    var auth = FirebaseAuth.instance;
+    var id = auth.currentUser?.uid;
+    CollectionReference userCards = FirebaseFirestore.instance.collection("users").doc(id).collection("payments");
+    var responseBody = await userCards.get();
+    for (var element in responseBody.docs) {
+      userCardsList.add(element.data());
+    }
+    update();
+  }
+
+  @override
+  void onInit() {
+    cardController = TextEditingController();
+    getData();
+    super.onInit();
+  }
+
+  @override
+  void dispose() {
+    cardController.dispose();
+    super.dispose();
+  }
+
+  @override
+  deleteCard(cardId) {
+    Get.defaultDialog(
+      radius: 10,
+      title: "!حذف البطاقة",
+      middleText: "",
+      textConfirm: "حذف",
+      textCancel: "إلغاء",
+      onConfirm: () async {
+        var auth = FirebaseAuth.instance;
+        var id = auth.currentUser?.uid;
+        await FirebaseFirestore.instance.collection("users")
+            .doc(id).collection("payments")
+            .doc(cardId).delete();
+        Get.back();
+        update();
+      }
+    );
+  }
+}
