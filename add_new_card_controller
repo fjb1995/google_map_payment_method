@@ -1,0 +1,74 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_credit_card/credit_card_brand.dart';
+import 'package:flutter_credit_card/credit_card_model.dart';
+import 'package:get/get.dart';
+
+import 'mypaymentcards_controller.dart';
+
+abstract class AddNewCardController extends GetxController{
+  late TextEditingController cardTitleController ;
+  String cardNumber = '';
+  String expiryDate = '';
+  String cardHolderName = '';
+  String cvvCode = '';
+  bool isCvvFocused = false;
+  bool useGlassMorphism = false;
+  bool useBackgroundImage = false;
+  OutlineInputBorder? border;
+  late CreditCardBrand creditCardBrand;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> formState = GlobalKey<FormState>();
+  onCreditCardModelChange(CreditCardModel creditCardModel);
+  saveNewCard();
+}
+
+class AddNewCardControllerImp extends AddNewCardController{
+
+  @override
+  onCreditCardModelChange(CreditCardModel creditCardModel) {
+    cardNumber = creditCardModel.cardNumber;
+    expiryDate = creditCardModel.expiryDate;
+    cardHolderName = creditCardModel.cardHolderName;
+    cvvCode = creditCardModel.cvvCode;
+    isCvvFocused = creditCardModel.isCvvFocused;
+    update();
+  }
+
+  @override
+  saveNewCard() async {
+    if(formState.currentState!.validate()) {
+      if (formKey.currentState!.validate()) {
+        var auth = FirebaseAuth.instance;
+        var id = auth.currentUser?.uid;
+        var userProfileInfo = FirebaseFirestore.instance.collection("users");
+        var userPaymentsInfo = userProfileInfo.doc(id).collection("payments").doc(cardNumber);
+        await userPaymentsInfo.set({
+          "title" : cardTitleController.text,
+          "expired date" : expiryDate,
+          "card number" : cardNumber,
+          "cvv" : cvvCode,
+          "name" : cardHolderName,
+        });
+
+        MyPaymentCardsControllerImp controller = Get.find();
+        controller.getData();
+        Get.back();
+      }
+    }
+  }
+
+  @override
+  void onInit() {
+    cardTitleController = TextEditingController();
+    super.onInit();
+  }
+
+  @override
+  void dispose() {
+    cardTitleController.dispose();
+    super.dispose();
+  }
+
+}
